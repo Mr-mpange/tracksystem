@@ -67,7 +67,9 @@ function DriversPage() {
     queryFn: async (): Promise<DriverRow[]> => {
       const { data: rows, error } = await supabase
         .from("drivers")
-        .select("id, full_name, phone, email, license_number, vehicle_id, user_id, invited_at, created_at, vehicles(plate_number)")
+        .select(
+          "id, full_name, phone, email, license_number, vehicle_id, user_id, invited_at, created_at, vehicles!drivers_vehicle_id_fkey(plate_number)"
+        )
         .order("created_at", { ascending: false });
 
       if (error) throw new Error(error.message);

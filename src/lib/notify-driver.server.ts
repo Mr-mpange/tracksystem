@@ -12,7 +12,7 @@ export async function notifyDriverForAlert(
 
   const { data: driver } = await supabaseAdmin
     .from("drivers")
-    .select("id, full_name, phone, user_id, vehicles(plate_number)")
+    .select("id, full_name, phone, user_id, vehicles!drivers_vehicle_id_fkey(plate_number)")
     .eq("vehicle_id", vehicleId)
     .maybeSingle();
 
