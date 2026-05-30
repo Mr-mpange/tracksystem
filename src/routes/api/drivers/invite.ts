@@ -5,6 +5,8 @@ import { inviteDriver } from "@/lib/invite-driver.server";
 
 const Body = z.object({
   driverId: z.string().uuid(),
+  siteUrl: z.string().url().optional(),
+  sendEmail: z.boolean().optional(),
 });
 
 const cors = {
@@ -34,12 +36,16 @@ export const Route = createFileRoute("/api/drivers/invite")({
           }
 
           const siteUrl =
-            request.headers.get("origin") ||
+            parsed.data.siteUrl ||
             process.env.SITE_URL ||
             process.env.VITE_SITE_URL ||
-            "http://localhost:5173";
+            "https://mr-mpange.github.io/tracksystem";
 
-          const result = await inviteDriver(parsed.data.driverId, siteUrl);
+          const result = await inviteDriver(
+            parsed.data.driverId,
+            siteUrl,
+            parsed.data.sendEmail === true
+          );
           return json(result, result.ok ? 200 : 400);
         } catch (err) {
           if (err instanceof AuthError) {

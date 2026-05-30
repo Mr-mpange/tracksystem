@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Trash2, Link2, MessageSquare, Mail, Copy, Check, AlertCircle } from "lucide-react";
+import { Plus, Trash2, Link2, MessageSquare, KeyRound, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getFleetContext } from "@/lib/fleet-auth";
@@ -39,10 +39,13 @@ type DriverRow = {
 function DriversPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [inviteAfterCreate, setInviteAfterCreate] = useState(true);
-  const [invitingId, setInvitingId] = useState<string | null>(null);
-  const [copiedLink, setCopiedLink] = useState<string | null>(null);
-  const [lastInviteLink, setLastInviteLink] = useState<string | null>(null);
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [passwordDriver, setPasswordDriver] = useState<DriverRow | null>(null);
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [createLoginOnAdd, setCreateLoginOnAdd] = useState(true);
+  const [newDriverPassword, setNewDriverPassword] = useState("");
   const [form, setForm] = useState({
     full_name: "",
     license_number: "",
@@ -50,6 +53,8 @@ function DriversPage() {
     email: "",
     vehicle_id: "",
   });
+
+  const loginUrl = `${siteBaseUrl()}/login`;
 
   const { data: fleetCtx } = useQuery({ queryKey: ["fleet-context"], queryFn: getFleetContext });
 
@@ -88,75 +93,102 @@ function DriversPage() {
     },
   });
 
-  const sendInvite = async (driverId: string) => {
-    setInvitingId(driverId);
-
+  const setDriverPassword = async (driverId: string, pwd: string) => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      setInvitingId(null);
-      return toast.error("You must be signed in");
-    }
+    if (!session) return toast.error("You must be signed in");
 
-    let result: {
+    const result = await apiJson<{
       ok: boolean;
       error?: string;
       email?: string;
-      inviteLink?: string;
-      emailSent?: boolean;
-      emailError?: string;
-    };
+      loginUrl?: string;
+      message?: string;
+    }>("/api/drivers/set-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ driverId, password: pwd }),
+    });
+
+    if (!result.ok) {
+      toast.error(result.error ?? "Failed to set password");
+      return false;
+    }
+
+    qc.invalidateQueries({ queryKey: ["drivers"] });
+    toast.success(
+      `Login ready for ${result.email}. Share the password by phone/SMS. Sign in at: ${result.loginUrl ?? loginUrl}`,
+      { duration: 10000 }
+    );
+    return true;
+  };
+
+  const openPasswordDialog = (driver: DriverRow) => {
+    setPasswordDriver(driver);
+    setPassword("");
+    setPasswordConfirm("");
+    setPasswordOpen(true);
+  };
+
+  const submitPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordDriver) return;
+    if (password.length < 6) return toast.error("Password must be at least 6 characters");
+    if (password !== passwordConfirm) return toast.error("Passwords do not match");
+
+    setSavingPassword(true);
+    try {
+      const ok = await setDriverPassword(passwordDriver.id, password);
+      if (ok) {
+        setPasswordOpen(false);
+        setPasswordDriver(null);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to set password");
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  const sendEmailInvite = async (driverId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return toast.error("You must be signed in");
 
     try {
-      result = await apiJson("/api/drivers/invite", {
+      const result = await apiJson<{
+        ok: boolean;
+        error?: string;
+        emailSent?: boolean;
+        emailError?: string | null;
+      }>("/api/drivers/invite", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ driverId, siteUrl: siteBaseUrl() }),
+        body: JSON.stringify({ driverId, siteUrl: siteBaseUrl(), sendEmail: true }),
       });
-    } catch (err) {
-      setInvitingId(null);
-      return toast.error(err instanceof Error ? err.message : "Invite failed");
-    }
-    setInvitingId(null);
 
-    if (!result.ok) {
-      return toast.error(result.error ?? "Invite failed");
-    }
-
-    qc.invalidateQueries({ queryKey: ["drivers"] });
-
-    if (result.inviteLink) {
-      setLastInviteLink(result.inviteLink);
-    }
-
-    if (result.emailSent) {
-      toast.success(`Invite email sent to ${result.email}`);
-    } else {
-      toast.warning(
-        result.emailError
-          ? `Email not sent: ${result.emailError}. Copy the invite link below and send via WhatsApp/SMS.`
-          : "Email not sent (configure SMTP in Supabase → Authentication → Email). Copy the link below.",
-        { duration: 8000 }
-      );
-    }
-
-    if (result.inviteLink) {
-      try {
-        await navigator.clipboard.writeText(result.inviteLink);
-        setCopiedLink(driverId);
-        setTimeout(() => setCopiedLink(null), 3000);
-      } catch {
-        /* link shown in banner */
+      if (!result.ok) return toast.error(result.error ?? "Invite failed");
+      if (result.emailSent) {
+        toast.success("Invite email sent (requires SMTP in Supabase → Authentication → Email)");
+      } else {
+        toast.error(result.emailError ?? "Email not sent. Use Set password instead.");
       }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Invite failed");
     }
   };
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.email?.trim()) return toast.error("Email required for invite");
+    if (!form.email?.trim()) return toast.error("Email required for login");
     if (!form.phone?.trim()) return toast.error("Phone required for SMS alerts");
+    if (createLoginOnAdd && newDriverPassword.length < 6) {
+      return toast.error("Set a password (min 6 characters) or uncheck Create login now");
+    }
 
     const payload = {
       full_name: form.full_name,
@@ -170,7 +202,7 @@ function DriversPage() {
     if (error) {
       if (error.message.includes("row-level security")) {
         return toast.error(
-          "Permission denied — your account needs super_admin or fleet_manager role. Run the latest SQL migrations in Supabase."
+          "Permission denied — your account needs super_admin or fleet_manager role."
         );
       }
       return toast.error(error.message);
@@ -180,14 +212,16 @@ function DriversPage() {
       await supabase.from("vehicles").update({ driver_id: driver.id }).eq("id", form.vehicle_id);
     }
 
+    if (createLoginOnAdd) {
+      const ok = await setDriverPassword(driver.id, newDriverPassword);
+      if (!ok) return;
+    }
+
     setOpen(false);
     setForm({ full_name: "", license_number: "", phone: "", email: "", vehicle_id: "" });
+    setNewDriverPassword("");
     await qc.invalidateQueries({ queryKey: ["drivers"] });
-    toast.success("Driver saved");
-
-    if (inviteAfterCreate) {
-      await sendInvite(driver.id);
-    }
+    if (!createLoginOnAdd) toast.success("Driver saved — click Set password when ready");
   };
 
   const remove = async (id: string) => {
@@ -211,19 +245,11 @@ function DriversPage() {
       return (
         <Badge variant="default" className="mt-1 text-[10px]">
           <Link2 className="h-3 w-3 mr-1" />
-          Active
+          Can sign in
         </Badge>
       );
     }
-    if (d.invited_at) {
-      return (
-        <Badge variant="secondary" className="mt-1 text-[10px]">
-          <Mail className="h-3 w-3 mr-1" />
-          Invited
-        </Badge>
-      );
-    }
-    return <span className="text-xs text-muted-foreground">Not invited</span>;
+    return <span className="text-xs text-muted-foreground">No login yet</span>;
   };
 
   return (
@@ -231,8 +257,12 @@ function DriversPage() {
       <div className="flex items-end justify-between flex-wrap gap-4">
         <div>
           <h1 className="font-display text-3xl font-semibold">Drivers</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Add a driver, then invite. If email does not arrive, copy the invite link (WhatsApp works too).
+          <p className="text-sm text-muted-foreground mt-1 max-w-xl">
+            Set a password for each driver — no email needed. They sign in at{" "}
+            <a href={loginUrl} className="text-primary underline" target="_blank" rel="noreferrer">
+              {loginUrl}
+            </a>{" "}
+            with their email + password. Tell them the password by phone or SMS.
             {fleetCtx?.role && (
               <span className="block text-xs mt-1">Signed in as: {fleetCtx.role.replace("_", " ")}</span>
             )}
@@ -255,7 +285,7 @@ function DriversPage() {
                 <Input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <Label>Email (invite link)</Label>
+                <Label>Email (login)</Label>
                 <Input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </div>
               <div className="space-y-2">
@@ -284,56 +314,87 @@ function DriversPage() {
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
-                  checked={inviteAfterCreate}
-                  onChange={(e) => setInviteAfterCreate(e.target.checked)}
+                  checked={createLoginOnAdd}
+                  onChange={(e) => setCreateLoginOnAdd(e.target.checked)}
                 />
-                Send invite immediately
+                Create login now (set password)
               </label>
+              {createLoginOnAdd && (
+                <div className="space-y-2">
+                  <Label>Password for driver</Label>
+                  <Input
+                    type="password"
+                    required
+                    minLength={6}
+                    placeholder="Min 6 characters"
+                    value={newDriverPassword}
+                    onChange={(e) => setNewDriverPassword(e.target.value)}
+                  />
+                </div>
+              )}
               <Button type="submit" className="w-full">
-                Create {inviteAfterCreate ? "& invite" : ""}
+                Save driver
               </Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      {lastInviteLink && (
-        <Alert>
-          <Mail className="h-4 w-4" />
-          <AlertTitle>Invite link — share with driver</AlertTitle>
-          <AlertDescription className="space-y-2">
-            <p className="text-xs break-all font-mono bg-muted/50 p-2 rounded">{lastInviteLink}</p>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={async () => {
-                await navigator.clipboard.writeText(lastInviteLink);
-                toast.success("Copied");
-              }}
-            >
-              <Copy className="h-3 w-3 mr-1" /> Copy link
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Supabase only sends emails when SMTP is configured (Dashboard → Authentication → Email → SMTP).
-              Until then, paste this link in WhatsApp or SMS.
-            </p>
-          </AlertDescription>
-        </Alert>
-      )}
+      <Alert>
+        <KeyRound className="h-4 w-4" />
+        <AlertTitle>Email invites optional</AlertTitle>
+        <AlertDescription className="text-sm">
+          Supabase free email hits rate limits quickly. Use <strong>Set password</strong> instead.
+          To send real invite emails later: Supabase Dashboard → Authentication → Email → Custom SMTP,
+          and set Site URL to <code className="text-xs bg-muted px-1 rounded">{siteBaseUrl()}</code>.
+        </AlertDescription>
+      </Alert>
 
       {loadError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Could not load drivers</AlertTitle>
-          <AlertDescription>
-            {loadError.message}
-            <span className="block mt-1 text-xs">
-              Run all files in <code className="bg-muted px-1 rounded">supabase/migrations/</code> in the Supabase SQL
-              Editor, then refresh.
-            </span>
-          </AlertDescription>
+          <AlertDescription>{loadError.message}</AlertDescription>
         </Alert>
       )}
+
+      <Dialog open={passwordOpen} onOpenChange={setPasswordOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set driver password</DialogTitle>
+          </DialogHeader>
+          {passwordDriver && (
+            <form onSubmit={submitPassword} className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                <strong>{passwordDriver.full_name}</strong> will sign in with{" "}
+                <strong>{passwordDriver.email}</strong>
+              </p>
+              <div className="space-y-2">
+                <Label>New password</Label>
+                <Input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Confirm password</Label>
+                <Input
+                  type="password"
+                  required
+                  value={passwordConfirm}
+                  onChange={(e) => setPasswordConfirm(e.target.value)}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={savingPassword}>
+                {savingPassword ? "Saving…" : "Save password"}
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <div className="rounded-xl border bg-card overflow-hidden">
         <table className="w-full text-sm">
@@ -383,30 +444,14 @@ function DriversPage() {
                     {d.sms_count} sent
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex justify-end gap-1">
+                    <div className="flex justify-end gap-1 flex-wrap">
+                      <Button size="sm" variant="default" onClick={() => openPasswordDialog(d)}>
+                        <KeyRound className="h-3 w-3 mr-1" />
+                        {d.user_id ? "Reset password" : "Set password"}
+                      </Button>
                       {!d.user_id && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={invitingId === d.id}
-                          onClick={() => sendInvite(d.id)}
-                        >
-                          {invitingId === d.id ? (
-                            "Sending…"
-                          ) : copiedLink === d.id ? (
-                            <>
-                              <Check className="h-3 w-3 mr-1" /> Copied
-                            </>
-                          ) : (
-                            <>
-                              <Mail className="h-3 w-3 mr-1" /> Invite
-                            </>
-                          )}
-                        </Button>
-                      )}
-                      {!d.user_id && d.invited_at && (
-                        <Button size="sm" variant="ghost" onClick={() => sendInvite(d.id)} title="Resend / copy link">
-                          <Copy className="h-3 w-3" />
+                        <Button size="sm" variant="ghost" onClick={() => sendEmailInvite(d.id)} title="Optional — needs SMTP">
+                          Email invite
                         </Button>
                       )}
                       <Button variant="ghost" size="icon" onClick={() => remove(d.id)}>

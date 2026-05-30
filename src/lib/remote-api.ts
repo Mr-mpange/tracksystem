@@ -4,16 +4,25 @@
 
 const EDGE_FN: Record<string, string> = {
   "/api/drivers/invite": "invite-driver",
+  "/api/drivers/set-password": "set-driver-password",
   "/api/sms/bulk": "sms-bulk",
   "/api/schedules/notify": "schedule-notify",
 };
 
+const DEFAULT_SITE_URL = "https://mr-mpange.github.io/tracksystem";
+
 const isStaticHost = import.meta.env.VITE_GITHUB_PAGES === "true";
 
 export function siteBaseUrl(): string {
-  if (typeof window === "undefined") return "";
+  const fromEnv = import.meta.env.VITE_SITE_URL?.replace(/\/$/, "");
+  if (fromEnv) return fromEnv;
+  if (typeof window === "undefined") return DEFAULT_SITE_URL;
   const base = import.meta.env.BASE_URL || "/";
-  return `${window.location.origin}${base}`.replace(/\/$/, "");
+  const live = `${window.location.origin}${base}`.replace(/\/$/, "");
+  if (live.includes("localhost") || live.includes("127.0.0.1")) {
+    return DEFAULT_SITE_URL;
+  }
+  return live;
 }
 
 export function resolveApiUrl(path: string): string {

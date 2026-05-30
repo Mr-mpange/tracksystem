@@ -31,6 +31,7 @@ import { Route as ApiSmsTestRouteImport } from './routes/api/sms/test'
 import { Route as ApiSmsBulkRouteImport } from './routes/api/sms/bulk'
 import { Route as ApiSchedulesNotifyRouteImport } from './routes/api/schedules/notify'
 import { Route as ApiPublicUssdRouteImport } from './routes/api/public/ussd'
+import { Route as ApiDriversSetPasswordRouteImport } from './routes/api/drivers/set-password'
 import { Route as ApiDriversInviteRouteImport } from './routes/api/drivers/invite'
 import { Route as ApiDriverLocationRouteImport } from './routes/api/driver/location'
 import { Route as ApiConfigUssdRouteImport } from './routes/api/config/ussd'
@@ -146,6 +147,11 @@ const ApiPublicUssdRoute = ApiPublicUssdRouteImport.update({
   path: '/api/public/ussd',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDriversSetPasswordRoute = ApiDriversSetPasswordRouteImport.update({
+  id: '/api/drivers/set-password',
+  path: '/api/drivers/set-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiDriversInviteRoute = ApiDriversInviteRouteImport.update({
   id: '/api/drivers/invite',
   path: '/api/drivers/invite',
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/api/config/ussd': typeof ApiConfigUssdRoute
   '/api/driver/location': typeof ApiDriverLocationRoute
   '/api/drivers/invite': typeof ApiDriversInviteRoute
+  '/api/drivers/set-password': typeof ApiDriversSetPasswordRoute
   '/api/public/ussd': typeof ApiPublicUssdRoute
   '/api/schedules/notify': typeof ApiSchedulesNotifyRoute
   '/api/sms/bulk': typeof ApiSmsBulkRoute
@@ -215,6 +222,7 @@ export interface FileRoutesByTo {
   '/api/config/ussd': typeof ApiConfigUssdRoute
   '/api/driver/location': typeof ApiDriverLocationRoute
   '/api/drivers/invite': typeof ApiDriversInviteRoute
+  '/api/drivers/set-password': typeof ApiDriversSetPasswordRoute
   '/api/public/ussd': typeof ApiPublicUssdRoute
   '/api/schedules/notify': typeof ApiSchedulesNotifyRoute
   '/api/sms/bulk': typeof ApiSmsBulkRoute
@@ -244,6 +252,7 @@ export interface FileRoutesById {
   '/api/config/ussd': typeof ApiConfigUssdRoute
   '/api/driver/location': typeof ApiDriverLocationRoute
   '/api/drivers/invite': typeof ApiDriversInviteRoute
+  '/api/drivers/set-password': typeof ApiDriversSetPasswordRoute
   '/api/public/ussd': typeof ApiPublicUssdRoute
   '/api/schedules/notify': typeof ApiSchedulesNotifyRoute
   '/api/sms/bulk': typeof ApiSmsBulkRoute
@@ -273,6 +282,7 @@ export interface FileRouteTypes {
     | '/api/config/ussd'
     | '/api/driver/location'
     | '/api/drivers/invite'
+    | '/api/drivers/set-password'
     | '/api/public/ussd'
     | '/api/schedules/notify'
     | '/api/sms/bulk'
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/api/config/ussd'
     | '/api/driver/location'
     | '/api/drivers/invite'
+    | '/api/drivers/set-password'
     | '/api/public/ussd'
     | '/api/schedules/notify'
     | '/api/sms/bulk'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/api/config/ussd'
     | '/api/driver/location'
     | '/api/drivers/invite'
+    | '/api/drivers/set-password'
     | '/api/public/ussd'
     | '/api/schedules/notify'
     | '/api/sms/bulk'
@@ -345,6 +357,7 @@ export interface RootRouteChildren {
   ApiConfigUssdRoute: typeof ApiConfigUssdRoute
   ApiDriverLocationRoute: typeof ApiDriverLocationRoute
   ApiDriversInviteRoute: typeof ApiDriversInviteRoute
+  ApiDriversSetPasswordRoute: typeof ApiDriversSetPasswordRoute
   ApiPublicUssdRoute: typeof ApiPublicUssdRoute
   ApiSchedulesNotifyRoute: typeof ApiSchedulesNotifyRoute
   ApiSmsBulkRoute: typeof ApiSmsBulkRoute
@@ -508,6 +521,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicUssdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/drivers/set-password': {
+      id: '/api/drivers/set-password'
+      path: '/api/drivers/set-password'
+      fullPath: '/api/drivers/set-password'
+      preLoaderRoute: typeof ApiDriversSetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/drivers/invite': {
       id: '/api/drivers/invite'
       path: '/api/drivers/invite'
@@ -583,6 +603,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiConfigUssdRoute: ApiConfigUssdRoute,
   ApiDriverLocationRoute: ApiDriverLocationRoute,
   ApiDriversInviteRoute: ApiDriversInviteRoute,
+  ApiDriversSetPasswordRoute: ApiDriversSetPasswordRoute,
   ApiPublicUssdRoute: ApiPublicUssdRoute,
   ApiSchedulesNotifyRoute: ApiSchedulesNotifyRoute,
   ApiSmsBulkRoute: ApiSmsBulkRoute,

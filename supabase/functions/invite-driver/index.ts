@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
 
     await requireFleetManager(admin, req.headers.get("Authorization"));
 
-    const { driverId, siteUrl } = await req.json();
+    const { driverId, siteUrl, sendEmail } = await req.json();
     if (!driverId) return json({ ok: false, error: "driverId required" }, 400);
 
     const { data: driver, error: driverErr } = await admin
@@ -52,47 +52,35 @@ Deno.serve(async (req) => {
     if (driver.user_id) return json({ ok: false, error: "Driver already has an account" }, 400);
 
     const email = driver.email.trim().toLowerCase();
-    const base = (siteUrl || "https://mr-mpange.github.io/tracksystem").replace(/\/$/, "");
+    const base = (
+      Deno.env.get("SITE_URL") ||
+      siteUrl ||
+      "https://mr-mpange.github.io/tracksystem"
+    ).replace(/\/$/, "");
     const redirectTo = `${base}/accept-invite`;
     const meta = { full_name: driver.full_name, role: "driver" };
 
-    const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
-      redirectTo,
-      data: meta,
-    });
+    let emailSent = false;
+    let emailError: string | null = null;
 
-    const emailSent = !inviteErr;
-    const emailError = inviteErr?.message ?? null;
-    let userId = inviteData?.user?.id;
-
-    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
-      type: "invite",
-      email,
-      options: { redirectTo, data: meta },
-    });
-
-    if (linkErr || !linkData?.properties?.action_link) {
-      return json({
-        ok: false,
-        error: linkErr?.message ?? inviteErr?.message ?? "Failed to generate invite link",
-      }, 400);
+    if (sendEmail === true) {
+      const { error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
+        redirectTo,
+        data: meta,
+      });
+      emailSent = !inviteErr;
+      emailError = inviteErr?.message ?? null;
+    } else {
+      emailError =
+        "Use Set password on the Drivers page (no email). Or call with sendEmail:true after configuring SMTP.";
     }
-
-    userId = userId ?? linkData.user?.id;
-    if (userId) {
-      await admin.from("drivers").update({ user_id: userId }).eq("id", driver.id);
-      await admin.from("user_roles").delete().eq("user_id", userId);
-      await admin.from("user_roles").insert({ user_id: userId, role: "driver" });
-    }
-
-    await admin.from("drivers").update({ invited_at: new Date().toISOString() }).eq("id", driver.id);
 
     return json({
       ok: true,
       email,
-      inviteLink: linkData.properties.action_link,
       emailSent,
       emailError,
+      loginUrl: `${base}/login`,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Invite failed";
