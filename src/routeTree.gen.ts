@@ -10,12 +10,27 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedVehiclesRouteImport } from './routes/_authenticated/vehicles'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedMapRouteImport } from './routes/_authenticated/map'
+import { Route as AuthenticatedDriversRouteImport } from './routes/_authenticated/drivers'
+import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
+import { Route as ApiPublicIotDataRouteImport } from './routes/api/public/iot/data'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -23,40 +38,153 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedVehiclesRoute = AuthenticatedVehiclesRouteImport.update({
+  id: '/vehicles',
+  path: '/vehicles',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMapRoute = AuthenticatedMapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDriversRoute = AuthenticatedDriversRouteImport.update({
+  id: '/drivers',
+  path: '/drivers',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDevicesRoute = AuthenticatedDevicesRouteImport.update({
+  id: '/devices',
+  path: '/devices',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const ApiPublicIotDataRoute = ApiPublicIotDataRouteImport.update({
+  id: '/api/public/iot/data',
+  path: '/api/public/iot/data',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/alerts': typeof AuthenticatedAlertsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/devices': typeof AuthenticatedDevicesRoute
+  '/drivers': typeof AuthenticatedDriversRoute
+  '/map': typeof AuthenticatedMapRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/vehicles': typeof AuthenticatedVehiclesRoute
+  '/api/public/iot/data': typeof ApiPublicIotDataRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/alerts': typeof AuthenticatedAlertsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/devices': typeof AuthenticatedDevicesRoute
+  '/drivers': typeof AuthenticatedDriversRoute
+  '/map': typeof AuthenticatedMapRoute
+  '/reports': typeof AuthenticatedReportsRoute
+  '/vehicles': typeof AuthenticatedVehiclesRoute
+  '/api/public/iot/data': typeof ApiPublicIotDataRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/devices': typeof AuthenticatedDevicesRoute
+  '/_authenticated/drivers': typeof AuthenticatedDriversRoute
+  '/_authenticated/map': typeof AuthenticatedMapRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/vehicles': typeof AuthenticatedVehiclesRoute
+  '/api/public/iot/data': typeof ApiPublicIotDataRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/reset-password'
+    | '/signup'
+    | '/alerts'
+    | '/dashboard'
+    | '/devices'
+    | '/drivers'
+    | '/map'
+    | '/reports'
+    | '/vehicles'
+    | '/api/public/iot/data'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup'
-  id: '__root__' | '/' | '/login' | '/signup'
+  to:
+    | '/'
+    | '/login'
+    | '/reset-password'
+    | '/signup'
+    | '/alerts'
+    | '/dashboard'
+    | '/devices'
+    | '/drivers'
+    | '/map'
+    | '/reports'
+    | '/vehicles'
+    | '/api/public/iot/data'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/login'
+    | '/reset-password'
+    | '/signup'
+    | '/_authenticated/alerts'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/devices'
+    | '/_authenticated/drivers'
+    | '/_authenticated/map'
+    | '/_authenticated/reports'
+    | '/_authenticated/vehicles'
+    | '/api/public/iot/data'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  ApiPublicIotDataRoute: typeof ApiPublicIotDataRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -68,11 +196,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -82,13 +224,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/vehicles': {
+      id: '/_authenticated/vehicles'
+      path: '/vehicles'
+      fullPath: '/vehicles'
+      preLoaderRoute: typeof AuthenticatedVehiclesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/map': {
+      id: '/_authenticated/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof AuthenticatedMapRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/drivers': {
+      id: '/_authenticated/drivers'
+      path: '/drivers'
+      fullPath: '/drivers'
+      preLoaderRoute: typeof AuthenticatedDriversRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/devices': {
+      id: '/_authenticated/devices'
+      path: '/devices'
+      fullPath: '/devices'
+      preLoaderRoute: typeof AuthenticatedDevicesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/alerts': {
+      id: '/_authenticated/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AuthenticatedAlertsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/public/iot/data': {
+      id: '/api/public/iot/data'
+      path: '/api/public/iot/data'
+      fullPath: '/api/public/iot/data'
+      preLoaderRoute: typeof ApiPublicIotDataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
+  AuthenticatedDriversRoute: typeof AuthenticatedDriversRoute
+  AuthenticatedMapRoute: typeof AuthenticatedMapRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedVehiclesRoute: typeof AuthenticatedVehiclesRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
+  AuthenticatedDriversRoute: AuthenticatedDriversRoute,
+  AuthenticatedMapRoute: AuthenticatedMapRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedVehiclesRoute: AuthenticatedVehiclesRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  ApiPublicIotDataRoute: ApiPublicIotDataRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
