@@ -6,6 +6,7 @@ export type InviteResult = {
   email?: string;
   inviteLink?: string;
   emailSent?: boolean;
+  emailError?: string | null;
 };
 
 function getRedirectUrl(siteUrl: string) {
@@ -50,6 +51,7 @@ export async function inviteDriver(driverId: string, siteUrl: string): Promise<I
   );
 
   const emailSent = !inviteErr;
+  const emailError = inviteErr?.message ?? null;
   let userId = inviteData?.user?.id;
 
   if (inviteErr) {
@@ -89,5 +91,6 @@ export async function inviteDriver(driverId: string, siteUrl: string): Promise<I
     email,
     inviteLink: linkData.properties.action_link,
     emailSent,
+    emailError,
   };
 }

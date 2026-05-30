@@ -62,6 +62,7 @@ Deno.serve(async (req) => {
     });
 
     const emailSent = !inviteErr;
+    const emailError = inviteErr?.message ?? null;
     let userId = inviteData?.user?.id;
 
     const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
@@ -91,6 +92,7 @@ Deno.serve(async (req) => {
       email,
       inviteLink: linkData.properties.action_link,
       emailSent,
+      emailError,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Invite failed";

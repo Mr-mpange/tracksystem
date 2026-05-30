@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Trash2, Link2, MessageSquare, Mail, Copy, Check } from "lucide-react";
+import { Plus, Trash2, Link2, MessageSquare, Mail, Copy, Check, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getFleetContext } from "@/lib/fleet-auth";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const Route = createFileRoute("/_authenticated/drivers")({
   head: () => ({ meta: [{ title: "Drivers — EcoTrack" }] }),
@@ -22,12 +23,26 @@ export const Route = createFileRoute("/_authenticated/drivers")({
   component: DriversPage,
 });
 
+type DriverRow = {
+  id: string;
+  full_name: string;
+  phone: string | null;
+  email: string | null;
+  license_number: string | null;
+  vehicle_id: string | null;
+  user_id: string | null;
+  invited_at: string | null;
+  vehicles: { plate_number: string } | null;
+  sms_count: number;
+};
+
 function DriversPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [inviteAfterCreate, setInviteAfterCreate] = useState(true);
   const [invitingId, setInvitingId] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
+  const [lastInviteLink, setLastInviteLink] = useState<string | null>(null);
   const [form, setForm] = useState({
     full_name: "",
     license_number: "",
@@ -36,20 +51,39 @@ function DriversPage() {
     vehicle_id: "",
   });
 
+  const { data: fleetCtx } = useQuery({ queryKey: ["fleet-context"], queryFn: getFleetContext });
+
   const { data: vehicles } = useQuery({
     queryKey: ["vehicles-list"],
-    queryFn: async () => (await supabase.from("vehicles").select("id, plate_number").order("plate_number")).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("vehicles").select("id, plate_number").order("plate_number");
+      if (error) throw error;
+      return data ?? [];
+    },
   });
 
-  const { data } = useQuery({
+  const { data, error: loadError, isLoading } = useQuery({
     queryKey: ["drivers"],
-    queryFn: async () =>
-      (
-        await supabase
-          .from("drivers")
-          .select("*, vehicles(plate_number), sms_logs(id, created_at, status)")
-          .order("created_at", { ascending: false })
-      ).data ?? [],
+    queryFn: async (): Promise<DriverRow[]> => {
+      const { data: rows, error } = await supabase
+        .from("drivers")
+        .select("id, full_name, phone, email, license_number, vehicle_id, user_id, invited_at, created_at, vehicles(plate_number)")
+        .order("created_at", { ascending: false });
+
+      if (error) throw new Error(error.message);
+
+      const { data: smsRows } = await supabase.from("sms_logs").select("driver_id");
+      const smsCount: Record<string, number> = {};
+      for (const s of smsRows ?? []) {
+        if (s.driver_id) smsCount[s.driver_id] = (smsCount[s.driver_id] ?? 0) + 1;
+      }
+
+      return (rows ?? []).map((d) => ({
+        ...d,
+        vehicles: d.vehicles as DriverRow["vehicles"],
+        sms_count: smsCount[d.id] ?? 0,
+      }));
+    },
   });
 
   const sendInvite = async (driverId: string) => {
@@ -61,7 +95,15 @@ function DriversPage() {
       return toast.error("You must be signed in");
     }
 
-    let result: { ok: boolean; error?: string; email?: string; inviteLink?: string; emailSent?: boolean };
+    let result: {
+      ok: boolean;
+      error?: string;
+      email?: string;
+      inviteLink?: string;
+      emailSent?: boolean;
+      emailError?: string;
+    };
+
     try {
       result = await apiJson("/api/drivers/invite", {
         method: "POST",
@@ -83,10 +125,19 @@ function DriversPage() {
 
     qc.invalidateQueries({ queryKey: ["drivers"] });
 
+    if (result.inviteLink) {
+      setLastInviteLink(result.inviteLink);
+    }
+
     if (result.emailSent) {
       toast.success(`Invite email sent to ${result.email}`);
     } else {
-      toast.info("Email not sent — copy the link and share it with the driver");
+      toast.warning(
+        result.emailError
+          ? `Email not sent: ${result.emailError}. Copy the invite link below and send via WhatsApp/SMS.`
+          : "Email not sent (configure SMTP in Supabase → Authentication → Email). Copy the link below.",
+        { duration: 8000 }
+      );
     }
 
     if (result.inviteLink) {
@@ -94,9 +145,8 @@ function DriversPage() {
         await navigator.clipboard.writeText(result.inviteLink);
         setCopiedLink(driverId);
         setTimeout(() => setCopiedLink(null), 3000);
-        toast.success("Invite link copied to clipboard");
       } catch {
-        toast.message("Invite link", { description: result.inviteLink });
+        /* link shown in banner */
       }
     }
   };
@@ -115,7 +165,14 @@ function DriversPage() {
     };
 
     const { data: driver, error } = await supabase.from("drivers").insert(payload).select("id").single();
-    if (error) return toast.error(error.message);
+    if (error) {
+      if (error.message.includes("row-level security")) {
+        return toast.error(
+          "Permission denied — your account needs super_admin or fleet_manager role. Run the latest SQL migrations in Supabase."
+        );
+      }
+      return toast.error(error.message);
+    }
 
     if (form.vehicle_id) {
       await supabase.from("vehicles").update({ driver_id: driver.id }).eq("id", form.vehicle_id);
@@ -123,18 +180,18 @@ function DriversPage() {
 
     setOpen(false);
     setForm({ full_name: "", license_number: "", phone: "", email: "", vehicle_id: "" });
-    qc.invalidateQueries({ queryKey: ["drivers"] });
+    await qc.invalidateQueries({ queryKey: ["drivers"] });
+    toast.success("Driver saved");
 
     if (inviteAfterCreate) {
       await sendInvite(driver.id);
-    } else {
-      toast.success("Driver added. Click Invite to send login link.");
     }
   };
 
   const remove = async (id: string) => {
     await supabase.from("vehicles").update({ driver_id: null }).eq("driver_id", id);
-    await supabase.from("drivers").delete().eq("id", id);
+    const { error } = await supabase.from("drivers").delete().eq("id", id);
+    if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["drivers"] });
   };
 
@@ -147,7 +204,7 @@ function DriversPage() {
     toast.success("Vehicle assigned");
   };
 
-  const accountBadge = (d: any) => {
+  const accountBadge = (d: DriverRow) => {
     if (d.user_id) {
       return (
         <Badge variant="default" className="mt-1 text-[10px]">
@@ -172,8 +229,11 @@ function DriversPage() {
       <div className="flex items-end justify-between flex-wrap gap-4">
         <div>
           <h1 className="font-display text-3xl font-semibold">Drivers</h1>
-          <p className="text-sm text-muted-foreground">
-            Add a driver, then invite by email. They set a password and open My Track. Link is copied for WhatsApp/SMS too.
+          <p className="text-sm text-muted-foreground mt-1">
+            Add a driver, then invite. If email does not arrive, copy the invite link (WhatsApp works too).
+            {fleetCtx?.role && (
+              <span className="block text-xs mt-1">Signed in as: {fleetCtx.role.replace("_", " ")}</span>
+            )}
           </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -225,7 +285,7 @@ function DriversPage() {
                   checked={inviteAfterCreate}
                   onChange={(e) => setInviteAfterCreate(e.target.checked)}
                 />
-                Send invite email immediately
+                Send invite immediately
               </label>
               <Button type="submit" className="w-full">
                 Create {inviteAfterCreate ? "& invite" : ""}
@@ -234,6 +294,44 @@ function DriversPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {lastInviteLink && (
+        <Alert>
+          <Mail className="h-4 w-4" />
+          <AlertTitle>Invite link — share with driver</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p className="text-xs break-all font-mono bg-muted/50 p-2 rounded">{lastInviteLink}</p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                await navigator.clipboard.writeText(lastInviteLink);
+                toast.success("Copied");
+              }}
+            >
+              <Copy className="h-3 w-3 mr-1" /> Copy link
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Supabase only sends emails when SMTP is configured (Dashboard → Authentication → Email → SMTP).
+              Until then, paste this link in WhatsApp or SMS.
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {loadError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Could not load drivers</AlertTitle>
+          <AlertDescription>
+            {loadError.message}
+            <span className="block mt-1 text-xs">
+              Run all files in <code className="bg-muted px-1 rounded">supabase/migrations/</code> in the Supabase SQL
+              Editor, then refresh.
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="rounded-xl border bg-card overflow-hidden">
         <table className="w-full text-sm">
@@ -248,70 +346,78 @@ function DriversPage() {
             </tr>
           </thead>
           <tbody>
-            {(data ?? []).map((d: any) => (
-              <tr key={d.id} className="border-t">
-                <td className="px-4 py-3 font-medium">{d.full_name}</td>
-                <td className="px-4 py-3">{d.phone}</td>
-                <td className="px-4 py-3">
-                  <div>{d.email}</div>
-                  {accountBadge(d)}
-                </td>
-                <td className="px-4 py-3">
-                  <Select value={d.vehicle_id ?? ""} onValueChange={(v) => assignVehicle(d.id, v)}>
-                    <SelectTrigger className="h-8 w-36">
-                      <SelectValue placeholder="Assign" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(vehicles ?? []).map((v) => (
-                        <SelectItem key={v.id} value={v.id}>
-                          {v.plate_number}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </td>
-                <td className="px-4 py-3 text-xs text-muted-foreground">
-                  <MessageSquare className="h-3 w-3 inline mr-1" />
-                  {(d.sms_logs?.length ?? 0)} sent
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-1">
-                    {!d.user_id && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={invitingId === d.id}
-                        onClick={() => sendInvite(d.id)}
-                      >
-                        {invitingId === d.id ? (
-                          "Sending…"
-                        ) : copiedLink === d.id ? (
-                          <>
-                            <Check className="h-3 w-3 mr-1" /> Copied
-                          </>
-                        ) : (
-                          <>
-                            <Mail className="h-3 w-3 mr-1" /> Invite
-                          </>
-                        )}
-                      </Button>
-                    )}
-                    {!d.user_id && d.invited_at && (
-                      <Button size="sm" variant="ghost" onClick={() => sendInvite(d.id)} title="Resend / copy link">
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="icon" onClick={() => remove(d.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {(data?.length ?? 0) === 0 && (
+            {isLoading && (
               <tr>
                 <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
-                  No drivers yet.
+                  Loading drivers…
+                </td>
+              </tr>
+            )}
+            {!isLoading &&
+              (data ?? []).map((d) => (
+                <tr key={d.id} className="border-t">
+                  <td className="px-4 py-3 font-medium">{d.full_name}</td>
+                  <td className="px-4 py-3">{d.phone}</td>
+                  <td className="px-4 py-3">
+                    <div>{d.email}</div>
+                    {accountBadge(d)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Select value={d.vehicle_id ?? ""} onValueChange={(v) => assignVehicle(d.id, v)}>
+                      <SelectTrigger className="h-8 w-36">
+                        <SelectValue placeholder="Assign" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(vehicles ?? []).map((v) => (
+                          <SelectItem key={v.id} value={v.id}>
+                            {v.plate_number}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    <MessageSquare className="h-3 w-3 inline mr-1" />
+                    {d.sms_count} sent
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end gap-1">
+                      {!d.user_id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={invitingId === d.id}
+                          onClick={() => sendInvite(d.id)}
+                        >
+                          {invitingId === d.id ? (
+                            "Sending…"
+                          ) : copiedLink === d.id ? (
+                            <>
+                              <Check className="h-3 w-3 mr-1" /> Copied
+                            </>
+                          ) : (
+                            <>
+                              <Mail className="h-3 w-3 mr-1" /> Invite
+                            </>
+                          )}
+                        </Button>
+                      )}
+                      {!d.user_id && d.invited_at && (
+                        <Button size="sm" variant="ghost" onClick={() => sendInvite(d.id)} title="Resend / copy link">
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" onClick={() => remove(d.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            {!isLoading && !loadError && (data?.length ?? 0) === 0 && (
+              <tr>
+                <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                  No drivers yet. Click <strong>Add driver</strong> above.
                 </td>
               </tr>
             )}
