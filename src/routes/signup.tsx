@@ -49,7 +49,9 @@ function SignupPage() {
           <span className="font-display text-lg font-semibold">EcoTrack</span>
         </div>
         <h1 className="text-2xl font-semibold">Create account</h1>
-        <p className="mt-1 text-sm text-muted-foreground">First user becomes the super admin.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          First user becomes super admin. Drivers: use the email your fleet admin registered for you.
+        </p>
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Full name</Label>

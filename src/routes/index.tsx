@@ -57,9 +57,17 @@ function Landing() {
             Real-time engine temperature, GPS tracking, fuel usage and carbon emissions in one
             production-grade dashboard built for fleet operators.
           </p>
-          <div className="mt-8 flex justify-center gap-3">
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link to="/signup" className="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">Create account</Link>
             <Link to="/login" className="rounded-md border px-5 py-2.5 text-sm hover:bg-accent">Sign in</Link>
+            <a
+              href="https://mr-mpange.github.io/tracksystem/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-md border border-primary/40 px-5 py-2.5 text-sm text-primary hover:bg-primary/10"
+            >
+              Try live demo
+            </a>
           </div>
         </div>
 

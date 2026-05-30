@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { notifyDriverForAlert } from "@/lib/notify-driver.server";
+import { checkRouteCompliance } from "@/lib/check-route.server";
 
 const Payload = z.object({
   deviceId: z.string().min(1).max(128),
@@ -47,6 +49,9 @@ export const Route = createFileRoute("/api/public/iot/data")({
         });
         if (logErr) return json({ error: logErr.message }, 500);
 
+        // 2b. Route compliance (schedule + assigned route)
+        checkRouteCompliance(device.vehicle_id, p.latitude, p.longitude).catch(console.error);
+
         // 3. Update device heartbeat
         await supabaseAdmin.from("devices")
           .update({ last_seen: new Date().toISOString(), status: "online" })
@@ -68,10 +73,24 @@ export const Route = createFileRoute("/api/public/iot/data")({
         else if (p.temperature >= TEMP_WARN) alerts.push({ type: "high_temperature", severity: "warning", message: `High engine temperature: ${p.temperature}°C` });
         if (emissionKg >= EMISSION_ALERT_KG) alerts.push({ type: "high_emission", severity: "warning", message: `High CO₂ emission burst: ${emissionKg.toFixed(1)} kg` });
         for (const a of alerts) {
-          await supabaseAdmin.from("alerts").insert({
-            vehicle_id: device.vehicle_id, device_id: device.id,
-            type: a.type, severity: a.severity, message: a.message, status: "open",
-          });
+          const { data: alertRow } = await supabaseAdmin
+            .from("alerts")
+            .insert({
+              vehicle_id: device.vehicle_id,
+              device_id: device.id,
+              type: a.type,
+              severity: a.severity,
+              message: a.message,
+              status: "open",
+            })
+            .select("id")
+            .single();
+
+          if (alertRow?.id) {
+            notifyDriverForAlert(device.vehicle_id, alertRow.id, a.message, a.severity).catch((e) =>
+              console.error("[IoT] notify failed:", e)
+            );
+          }
         }
 
         return json({ ok: true, emissionKg, alerts: alerts.length }, 200);

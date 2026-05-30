@@ -12,15 +12,28 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedVehiclesRouteImport } from './routes/_authenticated/vehicles'
+import { Route as AuthenticatedSchedulesRouteImport } from './routes/_authenticated/schedules'
+import { Route as AuthenticatedRoutesRouteImport } from './routes/_authenticated/routes'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedMyTrackRouteImport } from './routes/_authenticated/my-track'
+import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedMapRouteImport } from './routes/_authenticated/map'
 import { Route as AuthenticatedDriversRouteImport } from './routes/_authenticated/drivers'
+import { Route as AuthenticatedDriverReportsRouteImport } from './routes/_authenticated/driver-reports'
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
+import { Route as ApiSmsTestRouteImport } from './routes/api/sms/test'
+import { Route as ApiSmsBulkRouteImport } from './routes/api/sms/bulk'
+import { Route as ApiSchedulesNotifyRouteImport } from './routes/api/schedules/notify'
+import { Route as ApiPublicUssdRouteImport } from './routes/api/public/ussd'
+import { Route as ApiDriversInviteRouteImport } from './routes/api/drivers/invite'
+import { Route as ApiDriverLocationRouteImport } from './routes/api/driver/location'
+import { Route as ApiConfigUssdRouteImport } from './routes/api/config/ussd'
 import { Route as ApiPublicIotDataRouteImport } from './routes/api/public/iot/data'
 
 const SignupRoute = SignupRouteImport.update({
@@ -38,6 +51,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AcceptInviteRoute = AcceptInviteRouteImport.update({
+  id: '/accept-invite',
+  path: '/accept-invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -52,9 +70,29 @@ const AuthenticatedVehiclesRoute = AuthenticatedVehiclesRouteImport.update({
   path: '/vehicles',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSchedulesRoute = AuthenticatedSchedulesRouteImport.update({
+  id: '/schedules',
+  path: '/schedules',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedRoutesRoute = AuthenticatedRoutesRouteImport.update({
+  id: '/routes',
+  path: '/routes',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMyTrackRoute = AuthenticatedMyTrackRouteImport.update({
+  id: '/my-track',
+  path: '/my-track',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMessagesRoute = AuthenticatedMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedMapRoute = AuthenticatedMapRouteImport.update({
@@ -67,6 +105,12 @@ const AuthenticatedDriversRoute = AuthenticatedDriversRouteImport.update({
   path: '/drivers',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedDriverReportsRoute =
+  AuthenticatedDriverReportsRouteImport.update({
+    id: '/driver-reports',
+    path: '/driver-reports',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDevicesRoute = AuthenticatedDevicesRouteImport.update({
   id: '/devices',
   path: '/devices',
@@ -82,6 +126,41 @@ const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
   path: '/alerts',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiSmsTestRoute = ApiSmsTestRouteImport.update({
+  id: '/api/sms/test',
+  path: '/api/sms/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSmsBulkRoute = ApiSmsBulkRouteImport.update({
+  id: '/api/sms/bulk',
+  path: '/api/sms/bulk',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSchedulesNotifyRoute = ApiSchedulesNotifyRouteImport.update({
+  id: '/api/schedules/notify',
+  path: '/api/schedules/notify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicUssdRoute = ApiPublicUssdRouteImport.update({
+  id: '/api/public/ussd',
+  path: '/api/public/ussd',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDriversInviteRoute = ApiDriversInviteRouteImport.update({
+  id: '/api/drivers/invite',
+  path: '/api/drivers/invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDriverLocationRoute = ApiDriverLocationRouteImport.update({
+  id: '/api/driver/location',
+  path: '/api/driver/location',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiConfigUssdRoute = ApiConfigUssdRouteImport.update({
+  id: '/api/config/ussd',
+  path: '/api/config/ussd',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicIotDataRoute = ApiPublicIotDataRouteImport.update({
   id: '/api/public/iot/data',
   path: '/api/public/iot/data',
@@ -90,100 +169,186 @@ const ApiPublicIotDataRoute = ApiPublicIotDataRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
+  '/driver-reports': typeof AuthenticatedDriverReportsRoute
   '/drivers': typeof AuthenticatedDriversRoute
   '/map': typeof AuthenticatedMapRoute
+  '/messages': typeof AuthenticatedMessagesRoute
+  '/my-track': typeof AuthenticatedMyTrackRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/routes': typeof AuthenticatedRoutesRoute
+  '/schedules': typeof AuthenticatedSchedulesRoute
   '/vehicles': typeof AuthenticatedVehiclesRoute
+  '/api/config/ussd': typeof ApiConfigUssdRoute
+  '/api/driver/location': typeof ApiDriverLocationRoute
+  '/api/drivers/invite': typeof ApiDriversInviteRoute
+  '/api/public/ussd': typeof ApiPublicUssdRoute
+  '/api/schedules/notify': typeof ApiSchedulesNotifyRoute
+  '/api/sms/bulk': typeof ApiSmsBulkRoute
+  '/api/sms/test': typeof ApiSmsTestRoute
   '/api/public/iot/data': typeof ApiPublicIotDataRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
+  '/driver-reports': typeof AuthenticatedDriverReportsRoute
   '/drivers': typeof AuthenticatedDriversRoute
   '/map': typeof AuthenticatedMapRoute
+  '/messages': typeof AuthenticatedMessagesRoute
+  '/my-track': typeof AuthenticatedMyTrackRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/routes': typeof AuthenticatedRoutesRoute
+  '/schedules': typeof AuthenticatedSchedulesRoute
   '/vehicles': typeof AuthenticatedVehiclesRoute
+  '/api/config/ussd': typeof ApiConfigUssdRoute
+  '/api/driver/location': typeof ApiDriverLocationRoute
+  '/api/drivers/invite': typeof ApiDriversInviteRoute
+  '/api/public/ussd': typeof ApiPublicUssdRoute
+  '/api/schedules/notify': typeof ApiSchedulesNotifyRoute
+  '/api/sms/bulk': typeof ApiSmsBulkRoute
+  '/api/sms/test': typeof ApiSmsTestRoute
   '/api/public/iot/data': typeof ApiPublicIotDataRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
+  '/_authenticated/driver-reports': typeof AuthenticatedDriverReportsRoute
   '/_authenticated/drivers': typeof AuthenticatedDriversRoute
   '/_authenticated/map': typeof AuthenticatedMapRoute
+  '/_authenticated/messages': typeof AuthenticatedMessagesRoute
+  '/_authenticated/my-track': typeof AuthenticatedMyTrackRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/routes': typeof AuthenticatedRoutesRoute
+  '/_authenticated/schedules': typeof AuthenticatedSchedulesRoute
   '/_authenticated/vehicles': typeof AuthenticatedVehiclesRoute
+  '/api/config/ussd': typeof ApiConfigUssdRoute
+  '/api/driver/location': typeof ApiDriverLocationRoute
+  '/api/drivers/invite': typeof ApiDriversInviteRoute
+  '/api/public/ussd': typeof ApiPublicUssdRoute
+  '/api/schedules/notify': typeof ApiSchedulesNotifyRoute
+  '/api/sms/bulk': typeof ApiSmsBulkRoute
+  '/api/sms/test': typeof ApiSmsTestRoute
   '/api/public/iot/data': typeof ApiPublicIotDataRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/accept-invite'
     | '/login'
     | '/reset-password'
     | '/signup'
     | '/alerts'
     | '/dashboard'
     | '/devices'
+    | '/driver-reports'
     | '/drivers'
     | '/map'
+    | '/messages'
+    | '/my-track'
     | '/reports'
+    | '/routes'
+    | '/schedules'
     | '/vehicles'
+    | '/api/config/ussd'
+    | '/api/driver/location'
+    | '/api/drivers/invite'
+    | '/api/public/ussd'
+    | '/api/schedules/notify'
+    | '/api/sms/bulk'
+    | '/api/sms/test'
     | '/api/public/iot/data'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/accept-invite'
     | '/login'
     | '/reset-password'
     | '/signup'
     | '/alerts'
     | '/dashboard'
     | '/devices'
+    | '/driver-reports'
     | '/drivers'
     | '/map'
+    | '/messages'
+    | '/my-track'
     | '/reports'
+    | '/routes'
+    | '/schedules'
     | '/vehicles'
+    | '/api/config/ussd'
+    | '/api/driver/location'
+    | '/api/drivers/invite'
+    | '/api/public/ussd'
+    | '/api/schedules/notify'
+    | '/api/sms/bulk'
+    | '/api/sms/test'
     | '/api/public/iot/data'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/accept-invite'
     | '/login'
     | '/reset-password'
     | '/signup'
     | '/_authenticated/alerts'
     | '/_authenticated/dashboard'
     | '/_authenticated/devices'
+    | '/_authenticated/driver-reports'
     | '/_authenticated/drivers'
     | '/_authenticated/map'
+    | '/_authenticated/messages'
+    | '/_authenticated/my-track'
     | '/_authenticated/reports'
+    | '/_authenticated/routes'
+    | '/_authenticated/schedules'
     | '/_authenticated/vehicles'
+    | '/api/config/ussd'
+    | '/api/driver/location'
+    | '/api/drivers/invite'
+    | '/api/public/ussd'
+    | '/api/schedules/notify'
+    | '/api/sms/bulk'
+    | '/api/sms/test'
     | '/api/public/iot/data'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AcceptInviteRoute: typeof AcceptInviteRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  ApiConfigUssdRoute: typeof ApiConfigUssdRoute
+  ApiDriverLocationRoute: typeof ApiDriverLocationRoute
+  ApiDriversInviteRoute: typeof ApiDriversInviteRoute
+  ApiPublicUssdRoute: typeof ApiPublicUssdRoute
+  ApiSchedulesNotifyRoute: typeof ApiSchedulesNotifyRoute
+  ApiSmsBulkRoute: typeof ApiSmsBulkRoute
+  ApiSmsTestRoute: typeof ApiSmsTestRoute
   ApiPublicIotDataRoute: typeof ApiPublicIotDataRoute
 }
 
@@ -210,6 +375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/accept-invite': {
+      id: '/accept-invite'
+      path: '/accept-invite'
+      fullPath: '/accept-invite'
+      preLoaderRoute: typeof AcceptInviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -231,11 +403,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVehiclesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/schedules': {
+      id: '/_authenticated/schedules'
+      path: '/schedules'
+      fullPath: '/schedules'
+      preLoaderRoute: typeof AuthenticatedSchedulesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/routes': {
+      id: '/_authenticated/routes'
+      path: '/routes'
+      fullPath: '/routes'
+      preLoaderRoute: typeof AuthenticatedRoutesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/reports': {
       id: '/_authenticated/reports'
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/my-track': {
+      id: '/_authenticated/my-track'
+      path: '/my-track'
+      fullPath: '/my-track'
+      preLoaderRoute: typeof AuthenticatedMyTrackRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/messages': {
+      id: '/_authenticated/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof AuthenticatedMessagesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/map': {
@@ -250,6 +450,13 @@ declare module '@tanstack/react-router' {
       path: '/drivers'
       fullPath: '/drivers'
       preLoaderRoute: typeof AuthenticatedDriversRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/driver-reports': {
+      id: '/_authenticated/driver-reports'
+      path: '/driver-reports'
+      fullPath: '/driver-reports'
+      preLoaderRoute: typeof AuthenticatedDriverReportsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/devices': {
@@ -273,6 +480,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAlertsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/sms/test': {
+      id: '/api/sms/test'
+      path: '/api/sms/test'
+      fullPath: '/api/sms/test'
+      preLoaderRoute: typeof ApiSmsTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sms/bulk': {
+      id: '/api/sms/bulk'
+      path: '/api/sms/bulk'
+      fullPath: '/api/sms/bulk'
+      preLoaderRoute: typeof ApiSmsBulkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/schedules/notify': {
+      id: '/api/schedules/notify'
+      path: '/api/schedules/notify'
+      fullPath: '/api/schedules/notify'
+      preLoaderRoute: typeof ApiSchedulesNotifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/ussd': {
+      id: '/api/public/ussd'
+      path: '/api/public/ussd'
+      fullPath: '/api/public/ussd'
+      preLoaderRoute: typeof ApiPublicUssdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/drivers/invite': {
+      id: '/api/drivers/invite'
+      path: '/api/drivers/invite'
+      fullPath: '/api/drivers/invite'
+      preLoaderRoute: typeof ApiDriversInviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/driver/location': {
+      id: '/api/driver/location'
+      path: '/api/driver/location'
+      fullPath: '/api/driver/location'
+      preLoaderRoute: typeof ApiDriverLocationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/config/ussd': {
+      id: '/api/config/ussd'
+      path: '/api/config/ussd'
+      fullPath: '/api/config/ussd'
+      preLoaderRoute: typeof ApiConfigUssdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/iot/data': {
       id: '/api/public/iot/data'
       path: '/api/public/iot/data'
@@ -287,9 +543,14 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
+  AuthenticatedDriverReportsRoute: typeof AuthenticatedDriverReportsRoute
   AuthenticatedDriversRoute: typeof AuthenticatedDriversRoute
   AuthenticatedMapRoute: typeof AuthenticatedMapRoute
+  AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
+  AuthenticatedMyTrackRoute: typeof AuthenticatedMyTrackRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedRoutesRoute: typeof AuthenticatedRoutesRoute
+  AuthenticatedSchedulesRoute: typeof AuthenticatedSchedulesRoute
   AuthenticatedVehiclesRoute: typeof AuthenticatedVehiclesRoute
 }
 
@@ -297,9 +558,14 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
+  AuthenticatedDriverReportsRoute: AuthenticatedDriverReportsRoute,
   AuthenticatedDriversRoute: AuthenticatedDriversRoute,
   AuthenticatedMapRoute: AuthenticatedMapRoute,
+  AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
+  AuthenticatedMyTrackRoute: AuthenticatedMyTrackRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedRoutesRoute: AuthenticatedRoutesRoute,
+  AuthenticatedSchedulesRoute: AuthenticatedSchedulesRoute,
   AuthenticatedVehiclesRoute: AuthenticatedVehiclesRoute,
 }
 
@@ -310,11 +576,29 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AcceptInviteRoute: AcceptInviteRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  ApiConfigUssdRoute: ApiConfigUssdRoute,
+  ApiDriverLocationRoute: ApiDriverLocationRoute,
+  ApiDriversInviteRoute: ApiDriversInviteRoute,
+  ApiPublicUssdRoute: ApiPublicUssdRoute,
+  ApiSchedulesNotifyRoute: ApiSchedulesNotifyRoute,
+  ApiSmsBulkRoute: ApiSmsBulkRoute,
+  ApiSmsTestRoute: ApiSmsTestRoute,
   ApiPublicIotDataRoute: ApiPublicIotDataRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

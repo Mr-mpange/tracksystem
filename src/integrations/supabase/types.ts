@@ -138,15 +138,205 @@ export type Database = {
           },
         ]
       }
+      driver_reports: {
+        Row: {
+          created_at: string
+          driver_id: string | null
+          id: string
+          message: string
+          phone_number: string
+          source: Database["public"]["Enums"]["report_source"]
+          status: Database["public"]["Enums"]["report_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          message: string
+          phone_number: string
+          source?: Database["public"]["Enums"]["report_source"]
+          status?: Database["public"]["Enums"]["report_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          message?: string
+          phone_number?: string
+          source?: Database["public"]["Enums"]["report_source"]
+          status?: Database["public"]["Enums"]["report_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_reports_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_location_pings: {
+        Row: {
+          accuracy_m: number | null
+          created_at: string
+          driver_id: string
+          id: number
+          latitude: number
+          longitude: number
+          source: string
+          speed: number | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          accuracy_m?: number | null
+          created_at?: string
+          driver_id: string
+          id?: number
+          latitude: number
+          longitude: number
+          source?: string
+          speed?: number | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          accuracy_m?: number | null
+          created_at?: string
+          driver_id?: string
+          id?: number
+          latitude?: number
+          longitude?: number
+          source?: string
+          speed?: number | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_location_pings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_location_pings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      routes: {
+        Row: {
+          corridor_radius_m: number
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          waypoints: Json
+        }
+        Insert: {
+          corridor_radius_m?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          waypoints?: Json
+        }
+        Update: {
+          corridor_radius_m?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          waypoints?: Json
+        }
+        Relationships: []
+      }
+      driver_schedules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          driver_id: string
+          id: string
+          last_route_check_at: string | null
+          location: string | null
+          off_route_count: number
+          route_id: string | null
+          route_status: Database["public"]["Enums"]["route_status"]
+          scheduled_at: string
+          status: Database["public"]["Enums"]["schedule_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          driver_id: string
+          id?: string
+          last_route_check_at?: string | null
+          location?: string | null
+          off_route_count?: number
+          route_id?: string | null
+          route_status?: Database["public"]["Enums"]["route_status"]
+          scheduled_at: string
+          status?: Database["public"]["Enums"]["schedule_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          driver_id?: string
+          id?: string
+          last_route_check_at?: string | null
+          location?: string | null
+          off_route_count?: number
+          route_id?: string | null
+          route_status?: Database["public"]["Enums"]["route_status"]
+          scheduled_at?: string
+          status?: Database["public"]["Enums"]["schedule_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_schedules_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_schedules_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           created_at: string
           email: string | null
           full_name: string
           id: string
+          invited_at: string | null
           license_number: string | null
           phone: string | null
           updated_at: string
+          user_id: string | null
           vehicle_id: string | null
         }
         Insert: {
@@ -154,9 +344,11 @@ export type Database = {
           email?: string | null
           full_name: string
           id?: string
+          invited_at?: string | null
           license_number?: string | null
           phone?: string | null
           updated_at?: string
+          user_id?: string | null
           vehicle_id?: string | null
         }
         Update: {
@@ -164,9 +356,11 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          invited_at?: string | null
           license_number?: string | null
           phone?: string | null
           updated_at?: string
+          user_id?: string | null
           vehicle_id?: string | null
         }
         Relationships: [
@@ -175,6 +369,54 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_logs: {
+        Row: {
+          alert_id: string | null
+          created_at: string
+          driver_id: string | null
+          id: string
+          message: string
+          phone: string
+          provider_response: Json | null
+          status: string
+        }
+        Insert: {
+          alert_id?: string | null
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          message: string
+          phone: string
+          provider_response?: Json | null
+          status?: string
+        }
+        Update: {
+          alert_id?: string | null
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          message?: string
+          phone?: string
+          provider_response?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_logs_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sms_logs_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
             referencedColumns: ["id"]
           },
         ]
@@ -371,8 +613,12 @@ export type Database = {
     Enums: {
       alert_severity: "info" | "warning" | "critical"
       alert_status: "open" | "acknowledged" | "resolved"
-      alert_type: "high_temperature" | "device_offline" | "high_emission"
-      app_role: "super_admin" | "fleet_manager" | "operator"
+      alert_type: "high_temperature" | "device_offline" | "high_emission" | "off_route"
+      route_status: "not_started" | "on_route" | "off_route" | "completed"
+      app_role: "super_admin" | "fleet_manager" | "operator" | "driver"
+      report_source: "ussd" | "app"
+      report_status: "open" | "reviewed" | "resolved"
+      schedule_status: "scheduled" | "completed" | "cancelled"
       device_status: "online" | "offline" | "warning"
       fuel_type: "gasoline" | "diesel"
       vehicle_status: "active" | "inactive" | "maintenance"
@@ -505,8 +751,12 @@ export const Constants = {
     Enums: {
       alert_severity: ["info", "warning", "critical"],
       alert_status: ["open", "acknowledged", "resolved"],
-      alert_type: ["high_temperature", "device_offline", "high_emission"],
-      app_role: ["super_admin", "fleet_manager", "operator"],
+      alert_type: ["high_temperature", "device_offline", "high_emission", "off_route"],
+      route_status: ["not_started", "on_route", "off_route", "completed"],
+      app_role: ["super_admin", "fleet_manager", "operator", "driver"],
+      report_source: ["ussd", "app"],
+      report_status: ["open", "reviewed", "resolved"],
+      schedule_status: ["scheduled", "completed", "cancelled"],
       device_status: ["online", "offline", "warning"],
       fuel_type: ["gasoline", "diesel"],
       vehicle_status: ["active", "inactive", "maintenance"],

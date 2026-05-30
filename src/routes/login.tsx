@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Leaf } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getFleetContext } from "@/lib/fleet-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +26,8 @@ function LoginPage() {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Welcome back");
-    navigate({ to: "/dashboard" });
+    const ctx = await getFleetContext();
+    navigate({ to: ctx.isDriver ? "/my-track" : "/dashboard" });
   };
 
   return (

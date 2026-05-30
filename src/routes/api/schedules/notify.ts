@@ -1,0 +1,56 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
+import { AuthError, requireFleetManager } from "@/lib/server-auth.server";
+import {
+  notifyDriverScheduleCancelled,
+  notifyDriverScheduleCreated,
+} from "@/lib/notify-schedule.server";
+
+const Body = z.object({
+  scheduleId: z.string().uuid(),
+  type: z.enum(["created", "cancelled"]),
+});
+
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+export const Route = createFileRoute("/api/schedules/notify")({
+  server: {
+    handlers: {
+      OPTIONS: async () => new Response(null, { status: 204, headers: cors }),
+      POST: async ({ request }) => {
+        try {
+          await requireFleetManager(request.headers.get("Authorization"));
+
+          const parsed = Body.safeParse(await request.json().catch(() => null));
+          if (!parsed.success) {
+            return json({ ok: false, error: "Invalid body" }, 400);
+          }
+
+          const result =
+            parsed.data.type === "created"
+              ? await notifyDriverScheduleCreated(parsed.data.scheduleId)
+              : await notifyDriverScheduleCancelled(parsed.data.scheduleId);
+
+          return json(result, result.ok ? 200 : 400);
+        } catch (err) {
+          if (err instanceof AuthError) {
+            return json({ ok: false, error: err.message }, err.status);
+          }
+          console.error("[Schedule notify]", err);
+          return json({ ok: false, error: "Notification failed" }, 500);
+        }
+      },
+    },
+  },
+});
+
+function json(body: unknown, status: number) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...cors },
+  });
+}

@@ -1,1 +1,4 @@
-project_id = "dbosgaszhyupschtbsbs"
+project_id = "bogcdyhtwgzlrbsswoxf"
+
+[functions.ussd]
+verify_jwt = false

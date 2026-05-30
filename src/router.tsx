@@ -7,11 +7,14 @@ export const getRouter = () => {
     defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
   });
 
+  const basepath = import.meta.env.BASE_URL.replace(/\/$/, "") || undefined;
+
   const router = createRouter({
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
+    ...(basepath ? { basepath } : {}),
   });
 
   return router;
