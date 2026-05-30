@@ -22,6 +22,11 @@ export default defineConfig({
             enabled: true,
             prerender: { outputPath: "/index.html", crawlLinks: false },
           },
+          prerender: {
+            enabled: true,
+            autoStaticPathsDiscovery: true,
+            failOnError: false,
+          },
         }
       : {}),
   },

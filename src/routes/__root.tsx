@@ -79,10 +79,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+function GhPagesPathRestore() {
+  if (import.meta.env.VITE_GITHUB_PAGES !== "true") return null;
+  const script = `(function(l){if(l.search[1]==='/'){var d=l.search.slice(2).replace(/~and~/g,'&').split('&');var p=d[0];l.replace(l.protocol+'//'+l.hostname+(l.port?':'+l.port:'')+l.pathname.split('/').slice(0,2).join('/')+'/'+p+(d.length>1?'?'+d.slice(1).join('&'):'')+l.hash);}})(window.location);`;
+  return <script dangerouslySetInnerHTML={{ __html: script }} />;
+}
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <head><HeadContent /></head>
+      <head>
+        <GhPagesPathRestore />
+        <HeadContent />
+      </head>
       <body style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
         {children}
         <Scripts />
