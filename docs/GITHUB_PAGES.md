@@ -27,6 +27,24 @@ Set **Site URL** (optional) to the same Pages URL for email links.
 
 Apply all files under `supabase/migrations/` in the Supabase SQL editor (if not done already).
 
+## Deploy Edge Functions (required for invite / SMS on Pages)
+
+GitHub Pages has **no** `/api/*` server. Admin actions call Supabase Edge Functions instead.
+
+From the project folder (with [Supabase CLI](https://supabase.com/docs/guides/cli) logged in):
+
+```bash
+supabase functions deploy invite-driver --project-ref bogcdyhtwgzlrbsswoxf
+supabase functions deploy sms-bulk --project-ref bogcdyhtwgzlrbsswoxf
+supabase functions deploy schedule-notify --project-ref bogcdyhtwgzlrbsswoxf
+```
+
+**Edge Function secrets** (Supabase Dashboard → Edge Functions → Secrets, or CLI):
+
+- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (often auto-injected)
+- `AT_API_KEY`, `AT_USERNAME` (optional, for SMS)
+- `AT_FROM_SHORTCODE`, `AT_USSD_CODE` (optional)
+
 ## What works on Pages
 
 | Feature | Pages |
@@ -35,8 +53,8 @@ Apply all files under `supabase/migrations/` in the Supabase SQL editor (if not 
 | Dashboard, map, routes (draw on map) | Yes |
 | Driver **My Track** + phone GPS | Yes (writes to `driver_location_pings`) |
 | Realtime map updates | Yes (Supabase) |
-| Bulk SMS, driver invite, schedule notify API | No (needs a server — use local `npm run dev` or deploy to Vercel/Cloudflare) |
-| USSD / IoT webhooks | Use Supabase Edge Functions (already deployed separately) |
+| Driver invite, bulk SMS, schedule SMS | Yes **after** Edge Functions above are deployed |
+| USSD webhook | `supabase functions deploy ussd` |
 
 ## Local static preview
 

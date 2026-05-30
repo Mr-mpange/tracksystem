@@ -5,6 +5,7 @@ import { MessageSquare, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getFleetContext } from "@/lib/fleet-auth";
+import { apiJson } from "@/lib/remote-api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -59,15 +60,20 @@ function MessagesPage() {
       return toast.error("Sign in required");
     }
 
-    const res = await fetch("/api/sms/bulk", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ message: message.trim(), driverIds: ids }),
-    });
-    const result = await res.json();
+    let result: { ok?: boolean; sent?: number; failed?: number; error?: string };
+    try {
+      result = await apiJson("/api/sms/bulk", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ message: message.trim(), driverIds: ids }),
+      });
+    } catch (err) {
+      setSending(false);
+      return toast.error(err instanceof Error ? err.message : "Bulk SMS failed");
+    }
     setSending(false);
 
     if (!result.ok && result.sent === 0) {

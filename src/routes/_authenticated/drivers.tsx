@@ -5,6 +5,7 @@ import { Plus, Trash2, Link2, MessageSquare, Mail, Copy, Check } from "lucide-re
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getFleetContext } from "@/lib/fleet-auth";
+import { apiJson, siteBaseUrl } from "@/lib/remote-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,15 +61,20 @@ function DriversPage() {
       return toast.error("You must be signed in");
     }
 
-    const res = await fetch("/api/drivers/invite", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ driverId }),
-    });
-    const result = await res.json();
+    let result: { ok: boolean; error?: string; email?: string; inviteLink?: string; emailSent?: boolean };
+    try {
+      result = await apiJson("/api/drivers/invite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ driverId, siteUrl: siteBaseUrl() }),
+      });
+    } catch (err) {
+      setInvitingId(null);
+      return toast.error(err instanceof Error ? err.message : "Invite failed");
+    }
     setInvitingId(null);
 
     if (!result.ok) {

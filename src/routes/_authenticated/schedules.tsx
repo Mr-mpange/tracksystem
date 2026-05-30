@@ -5,6 +5,8 @@ import { Calendar, Plus, Trash2, Copy, Check, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getFleetContext } from "@/lib/fleet-auth";
+import { apiJson } from "@/lib/remote-api";
+import { getUssdConfig } from "@/lib/ussd-config-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +29,7 @@ async function notifySchedule(scheduleId: string, type: "created" | "cancelled")
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return null;
 
-  const res = await fetch("/api/schedules/notify", {
+  return apiJson("/api/schedules/notify", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -35,7 +37,6 @@ async function notifySchedule(scheduleId: string, type: "created" | "cancelled")
     },
     body: JSON.stringify({ scheduleId, type }),
   });
-  return res.json();
 }
 
 function RouteStatusBadge({ status }: { status: string }) {
@@ -79,10 +80,7 @@ function SchedulesPage() {
 
   const { data: ussdConfig } = useQuery({
     queryKey: ["ussd-config"],
-    queryFn: async () => {
-      const res = await fetch("/api/config/ussd");
-      return res.json();
-    },
+    queryFn: async () => getUssdConfig(),
   });
 
   const { data: drivers } = useQuery({
