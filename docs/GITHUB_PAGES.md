@@ -42,7 +42,8 @@ supabase functions deploy schedule-notify --project-ref bogcdyhtwgzlrbsswoxf
 **Edge Function secrets** (Supabase Dashboard → Edge Functions → Secrets, or CLI):
 
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (often auto-injected)
-- `AT_API_KEY`, `AT_USERNAME` (optional, for SMS)
+- `AT_API_KEY`, `AT_USERNAME` (use `sandbox` + sandbox API key for testing)
+- `sms-test` and `sms-bulk` edge functions (deploy after changing secrets)
 - `AT_FROM_SHORTCODE`, `AT_USSD_CODE` (optional)
 
 ## What works on Pages

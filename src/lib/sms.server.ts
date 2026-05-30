@@ -6,7 +6,7 @@
  * Optional: AT_FROM_SHORTCODE (live/production sender ID)
  */
 
-const AT_MESSAGING_URL = "https://api.africastalking.com/version1/messaging";
+import { atMessagingUrl } from "@/lib/at-messaging";
 
 export type SmsResult = {
   ok: boolean;
@@ -37,7 +37,7 @@ export async function sendSms(phone: string, message: string): Promise<SmsResult
   }
 
   try {
-    const res = await fetch(AT_MESSAGING_URL, {
+    const res = await fetch(atMessagingUrl(username), {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -132,7 +132,7 @@ export async function sendBulkSms(phones: string[], message: string): Promise<Bu
   }
 
   try {
-    const res = await fetch(AT_MESSAGING_URL, {
+    const res = await fetch(atMessagingUrl(username), {
       method: "POST",
       headers: {
         Accept: "application/json",

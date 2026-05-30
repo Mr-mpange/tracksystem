@@ -23,6 +23,17 @@ function normalizePhone(phone: string): string | null {
   return `+${p}`;
 }
 
+function matchRecipient(
+  recipients: Array<{ number?: string; status?: string; statusCode?: number; messageId?: string }>,
+  phone: string
+) {
+  const digits = phone.replace(/\D/g, "");
+  return recipients.find((x) => {
+    const n = (x.number ?? "").replace(/\D/g, "");
+    return n === digits || n.endsWith(digits.slice(-9)) || digits.endsWith(n.slice(-9));
+  });
+}
+
 async function requireFleetManager(admin: ReturnType<typeof createClient>, authHeader: string | null) {
   if (!authHeader?.startsWith("Bearer ")) throw new Error("Unauthorized");
   const token = authHeader.replace("Bearer ", "").trim();
@@ -43,7 +54,9 @@ async function sendBulkSms(phones: string[], message: string) {
       ok: false,
       sent: 0,
       failed: unique.length,
-      results: unique.map((phone) => ({ phone, ok: false, error: "SMS not configured (set AT_API_KEY in Edge secrets)" })),
+      error: "AT_API_KEY not set in Supabase → Edge Functions → Secrets",
+      isSandbox: username === "sandbox",
+      results: unique.map((phone) => ({ phone, ok: false, error: "SMS not configured" })),
     };
   }
 
@@ -52,7 +65,12 @@ async function sendBulkSms(phones: string[], message: string) {
     body.append("from", Deno.env.get("AT_FROM_SHORTCODE")!);
   }
 
-  const res = await fetch("https://api.africastalking.com/version1/messaging", {
+  const messagingUrl =
+    username === "sandbox"
+      ? "https://api.sandbox.africastalking.com/version1/messaging"
+      : "https://api.africastalking.com/version1/messaging";
+
+  const res = await fetch(messagingUrl, {
     method: "POST",
     headers: {
       Accept: "application/json",
@@ -63,14 +81,51 @@ async function sendBulkSms(phones: string[], message: string) {
   });
 
   const data = await res.json().catch(() => ({}));
-  const recipients = data?.SMSMessageData?.Recipients ?? [];
+  const atMessage = data?.SMSMessageData?.Message as string | undefined;
+  const recipients = (data?.SMSMessageData?.Recipients ?? []) as Array<{
+    number?: string;
+    status?: string;
+    statusCode?: number;
+    messageId?: string;
+  }>;
+
+  if (!res.ok) {
+    return {
+      ok: false,
+      sent: 0,
+      failed: unique.length,
+      error: atMessage ?? `Africa's Talking HTTP ${res.status}`,
+      isSandbox: username === "sandbox",
+      atMessage,
+      results: unique.map((phone) => ({ phone, ok: false, error: atMessage })),
+    };
+  }
+
   const results = unique.map((phone) => {
-    const r = recipients.find((x: { number?: string }) => x.number?.includes(phone.replace("+", "")) || x.number === phone);
+    const r = matchRecipient(recipients, phone);
     const ok = r?.status !== "Failed" && Number(r?.statusCode ?? 0) < 400;
-    return { phone, ok, error: ok ? undefined : r?.status ?? "Failed" };
+    return {
+      phone,
+      ok,
+      status: r?.status,
+      messageId: r?.messageId,
+      error: ok ? undefined : r?.status ?? atMessage ?? "Failed",
+    };
   });
-  const sent = results.filter((r: { ok: boolean }) => r.ok).length;
-  return { ok: sent > 0, sent, failed: results.length - sent, results };
+
+  const sent = results.filter((r) => r.ok).length;
+  return {
+    ok: sent > 0,
+    sent,
+    failed: results.length - sent,
+    isSandbox: username === "sandbox",
+    atMessage,
+    sandboxNote:
+      username === "sandbox"
+        ? "Sandbox SMS does not arrive on your phone. View Outbox in AT dashboard or use simulator.africastalking.com:1517"
+        : null,
+    results,
+  };
 }
 
 Deno.serve(async (req) => {
@@ -99,14 +154,20 @@ Deno.serve(async (req) => {
     const result = await sendBulkSms(phones, message.trim());
 
     for (const d of drivers ?? []) {
-      const phone = d.phone!;
+      const phone = normalizePhone(d.phone!) ?? d.phone!;
       const match = result.results.find((r: { phone: string }) => r.phone === phone);
       await admin.from("sms_logs").insert({
         driver_id: d.id,
-        phone,
+        phone: d.phone!,
         message: message.trim(),
         status: match?.ok ? "sent" : "failed",
-        provider_response: { bulk: true, error: match?.error },
+        provider_response: {
+          bulk: true,
+          normalized: phone,
+          status: match?.status,
+          error: match?.error,
+          atMessage: result.atMessage,
+        },
       });
     }
 

@@ -6,6 +6,7 @@ const EDGE_FN: Record<string, string> = {
   "/api/drivers/invite": "invite-driver",
   "/api/drivers/set-password": "set-driver-password",
   "/api/sms/bulk": "sms-bulk",
+  "/api/sms/test": "sms-test",
   "/api/schedules/notify": "schedule-notify",
 };
 

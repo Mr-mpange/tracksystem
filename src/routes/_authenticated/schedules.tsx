@@ -1,12 +1,11 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Calendar, Plus, Trash2, Copy, Check, Phone } from "lucide-react";
+import { Calendar, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getFleetContext } from "@/lib/fleet-auth";
 import { apiJson } from "@/lib/remote-api";
-import { getUssdConfig } from "@/lib/ussd-config-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,7 +61,6 @@ function RouteStatusBadge({ status }: { status: string }) {
 function SchedulesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState<string | null>(null);
   const [smsOnCreate, setSmsOnCreate] = useState(true);
   const [form, setForm] = useState({
     driver_id: "",
@@ -76,11 +74,6 @@ function SchedulesPage() {
   const { data: routeList } = useQuery({
     queryKey: ["routes-list"],
     queryFn: async () => (await supabase.from("routes").select("id, name").order("name")).data ?? [],
-  });
-
-  const { data: ussdConfig } = useQuery({
-    queryKey: ["ussd-config"],
-    queryFn: async () => getUssdConfig(),
   });
 
   const { data: drivers } = useQuery({
@@ -99,13 +92,6 @@ function SchedulesPage() {
           .order("scheduled_at", { ascending: true })
       ).data ?? [],
   });
-
-  const copyText = async (key: string, text: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
-    toast.success("Copied");
-  };
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,11 +150,6 @@ function SchedulesPage() {
     qc.invalidateQueries({ queryKey: ["driver-schedules"] });
   };
 
-  const callbackUrl =
-    ussdConfig?.callbackUrlSupabase ??
-    ussdConfig?.callbackUrl ??
-    `https://bogcdyhtwgzlrbsswoxf.supabase.co/functions/v1/ussd`;
-
   return (
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex items-end justify-between flex-wrap gap-4">
@@ -178,7 +159,7 @@ function SchedulesPage() {
             Driver schedules
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Assign trips — driver gets SMS + can check USSD option 1.
+            Assign trips and notify drivers by SMS.
           </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -267,43 +248,6 @@ function SchedulesPage() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
-
-      {/* USSD setup panel */}
-      <div className="rounded-xl border bg-card p-5 space-y-4">
-        <h2 className="font-medium flex items-center gap-2">
-          <Phone className="h-4 w-4 text-primary" />
-          Africa&apos;s Talking USSD setup
-        </h2>
-        {ussdConfig?.ussdCode && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-muted-foreground">Driver dials:</span>
-            <code className="rounded bg-primary/10 text-primary px-2 py-1 font-mono text-sm">
-              {ussdConfig.ussdCode}
-            </code>
-            <Button size="sm" variant="ghost" onClick={() => copyText("code", ussdConfig.ussdCode)}>
-              {copied === "code" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-            </Button>
-          </div>
-        )}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground shrink-0">Callback URL:</span>
-          <code className="text-xs bg-muted px-2 py-1 rounded break-all flex-1">{callbackUrl}</code>
-          <Button size="sm" variant="outline" onClick={() => copyText("url", callbackUrl)}>
-            {copied === "url" ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
-            Copy
-          </Button>
-        </div>
-        <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1">
-          {(ussdConfig?.atDashboardSteps ?? []).map((step: string, i: number) => (
-            <li key={i}>{step}</li>
-          ))}
-        </ol>
-        <p className="text-xs text-muted-foreground">
-          Deploy USSD function once: <code className="bg-muted px-1 rounded">supabase functions deploy ussd</code>
-          <br />
-          Set <code className="bg-muted px-1 rounded">AT_USSD_CODE=*384*12345#</code> in Supabase → Edge Functions → Secrets.
-        </p>
       </div>
 
       <div className="rounded-xl border bg-card overflow-hidden">

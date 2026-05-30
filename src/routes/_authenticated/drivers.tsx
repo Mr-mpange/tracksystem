@@ -56,8 +56,6 @@ function DriversPage() {
 
   const loginUrl = `${siteBaseUrl()}/login`;
 
-  const { data: fleetCtx } = useQuery({ queryKey: ["fleet-context"], queryFn: getFleetContext });
-
   const { data: vehicles } = useQuery({
     queryKey: ["vehicles-list"],
     queryFn: async () => {
@@ -254,25 +252,13 @@ function DriversPage() {
 
   return (
     <div className="p-6 md:p-8 space-y-6">
-      <div className="flex items-end justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-semibold">Drivers</h1>
-          <p className="text-sm text-muted-foreground mt-1 max-w-xl">
-            Set a password for each driver — no email needed. They sign in at{" "}
-            <a href={loginUrl} className="text-primary underline" target="_blank" rel="noreferrer">
-              {loginUrl}
-            </a>{" "}
-            with their email + password. Tell them the password by phone or SMS.
-            {fleetCtx?.role && (
-              <span className="block text-xs mt-1">Signed in as: {fleetCtx.role.replace("_", " ")}</span>
-            )}
-          </p>
-        </div>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <h1 className="font-display text-3xl font-semibold">Drivers</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add driver
+              Add
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -339,16 +325,6 @@ function DriversPage() {
           </DialogContent>
         </Dialog>
       </div>
-
-      <Alert>
-        <KeyRound className="h-4 w-4" />
-        <AlertTitle>Email invites optional</AlertTitle>
-        <AlertDescription className="text-sm">
-          Supabase free email hits rate limits quickly. Use <strong>Set password</strong> instead.
-          To send real invite emails later: Supabase Dashboard → Authentication → Email → Custom SMTP,
-          and set Site URL to <code className="text-xs bg-muted px-1 rounded">{siteBaseUrl()}</code>.
-        </AlertDescription>
-      </Alert>
 
       {loadError && (
         <Alert variant="destructive">
@@ -464,7 +440,7 @@ function DriversPage() {
             {!isLoading && !loadError && (data?.length ?? 0) === 0 && (
               <tr>
                 <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
-                  No drivers yet. Click <strong>Add driver</strong> above.
+                  No drivers yet.
                 </td>
               </tr>
             )}

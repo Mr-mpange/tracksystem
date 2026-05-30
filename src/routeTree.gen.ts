@@ -34,7 +34,6 @@ import { Route as ApiPublicUssdRouteImport } from './routes/api/public/ussd'
 import { Route as ApiDriversSetPasswordRouteImport } from './routes/api/drivers/set-password'
 import { Route as ApiDriversInviteRouteImport } from './routes/api/drivers/invite'
 import { Route as ApiDriverLocationRouteImport } from './routes/api/driver/location'
-import { Route as ApiConfigUssdRouteImport } from './routes/api/config/ussd'
 import { Route as ApiPublicIotDataRouteImport } from './routes/api/public/iot/data'
 
 const SignupRoute = SignupRouteImport.update({
@@ -162,11 +161,6 @@ const ApiDriverLocationRoute = ApiDriverLocationRouteImport.update({
   path: '/api/driver/location',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiConfigUssdRoute = ApiConfigUssdRouteImport.update({
-  id: '/api/config/ussd',
-  path: '/api/config/ussd',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicIotDataRoute = ApiPublicIotDataRouteImport.update({
   id: '/api/public/iot/data',
   path: '/api/public/iot/data',
@@ -191,7 +185,6 @@ export interface FileRoutesByFullPath {
   '/routes': typeof AuthenticatedRoutesRoute
   '/schedules': typeof AuthenticatedSchedulesRoute
   '/vehicles': typeof AuthenticatedVehiclesRoute
-  '/api/config/ussd': typeof ApiConfigUssdRoute
   '/api/driver/location': typeof ApiDriverLocationRoute
   '/api/drivers/invite': typeof ApiDriversInviteRoute
   '/api/drivers/set-password': typeof ApiDriversSetPasswordRoute
@@ -219,7 +212,6 @@ export interface FileRoutesByTo {
   '/routes': typeof AuthenticatedRoutesRoute
   '/schedules': typeof AuthenticatedSchedulesRoute
   '/vehicles': typeof AuthenticatedVehiclesRoute
-  '/api/config/ussd': typeof ApiConfigUssdRoute
   '/api/driver/location': typeof ApiDriverLocationRoute
   '/api/drivers/invite': typeof ApiDriversInviteRoute
   '/api/drivers/set-password': typeof ApiDriversSetPasswordRoute
@@ -249,7 +241,6 @@ export interface FileRoutesById {
   '/_authenticated/routes': typeof AuthenticatedRoutesRoute
   '/_authenticated/schedules': typeof AuthenticatedSchedulesRoute
   '/_authenticated/vehicles': typeof AuthenticatedVehiclesRoute
-  '/api/config/ussd': typeof ApiConfigUssdRoute
   '/api/driver/location': typeof ApiDriverLocationRoute
   '/api/drivers/invite': typeof ApiDriversInviteRoute
   '/api/drivers/set-password': typeof ApiDriversSetPasswordRoute
@@ -279,7 +270,6 @@ export interface FileRouteTypes {
     | '/routes'
     | '/schedules'
     | '/vehicles'
-    | '/api/config/ussd'
     | '/api/driver/location'
     | '/api/drivers/invite'
     | '/api/drivers/set-password'
@@ -307,7 +297,6 @@ export interface FileRouteTypes {
     | '/routes'
     | '/schedules'
     | '/vehicles'
-    | '/api/config/ussd'
     | '/api/driver/location'
     | '/api/drivers/invite'
     | '/api/drivers/set-password'
@@ -336,7 +325,6 @@ export interface FileRouteTypes {
     | '/_authenticated/routes'
     | '/_authenticated/schedules'
     | '/_authenticated/vehicles'
-    | '/api/config/ussd'
     | '/api/driver/location'
     | '/api/drivers/invite'
     | '/api/drivers/set-password'
@@ -354,7 +342,6 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
-  ApiConfigUssdRoute: typeof ApiConfigUssdRoute
   ApiDriverLocationRoute: typeof ApiDriverLocationRoute
   ApiDriversInviteRoute: typeof ApiDriversInviteRoute
   ApiDriversSetPasswordRoute: typeof ApiDriversSetPasswordRoute
@@ -542,13 +529,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDriverLocationRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/config/ussd': {
-      id: '/api/config/ussd'
-      path: '/api/config/ussd'
-      fullPath: '/api/config/ussd'
-      preLoaderRoute: typeof ApiConfigUssdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/iot/data': {
       id: '/api/public/iot/data'
       path: '/api/public/iot/data'
@@ -600,7 +580,6 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
-  ApiConfigUssdRoute: ApiConfigUssdRoute,
   ApiDriverLocationRoute: ApiDriverLocationRoute,
   ApiDriversInviteRoute: ApiDriversInviteRoute,
   ApiDriversSetPasswordRoute: ApiDriversSetPasswordRoute,

@@ -55,7 +55,12 @@ async function sendSms(phone: string, message: string) {
     body.append("from", Deno.env.get("AT_FROM_SHORTCODE")!);
   }
 
-  const res = await fetch("https://api.africastalking.com/version1/messaging", {
+  const messagingUrl =
+    username === "sandbox"
+      ? "https://api.sandbox.africastalking.com/version1/messaging"
+      : "https://api.africastalking.com/version1/messaging";
+
+  const res = await fetch(messagingUrl, {
     method: "POST",
     headers: {
       Accept: "application/json",
