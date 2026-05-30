@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import { Undo2, Trash2, MapPin } from "lucide-react";
+import { Undo2, Trash2, MapPin, Crosshair, Route } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import type { Waypoint } from "@/lib/route-geo";
+import { SAMPLE_ROUTE_WAYPOINTS, type Waypoint } from "@/lib/route-geo";
 
 type Props = {
   waypoints: Waypoint[];
   onChange: (waypoints: Waypoint[]) => void;
   height?: string;
+  onUseSample?: () => void;
 };
 
-export function RouteDrawMap({ waypoints, onChange, height = "320px" }: Props) {
+export function RouteDrawMap({ waypoints, onChange, height = "320px", onUseSample }: Props) {
   const [Map, setMap] = useState<any>(null);
 
   useEffect(() => {
@@ -53,13 +55,42 @@ export function RouteDrawMap({ waypoints, onChange, height = "320px" }: Props) {
   const undo = () => onChange(waypoints.slice(0, -1));
   const clear = () => onChange([]);
 
+  const useMyLocation = () => {
+    if (!navigator.geolocation) return toast.error("Location not available");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const point: Waypoint = {
+          lat: Number(pos.coords.latitude.toFixed(6)),
+          lng: Number(pos.coords.longitude.toFixed(6)),
+          label: "You",
+        };
+        onChange(waypoints.length ? [point, ...waypoints.slice(1)] : [point, ...SAMPLE_ROUTE_WAYPOINTS.slice(1)]);
+        toast.success("Start point set from your location");
+      },
+      (err) => toast.error(err.message),
+      { enableHighAccuracy: true, timeout: 12_000 }
+    );
+  };
+
+  const loadSample = () => {
+    onChange([...SAMPLE_ROUTE_WAYPOINTS]);
+    onUseSample?.();
+    toast.message("Sample route loaded — edit on the map or save as-is");
+  };
+
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground flex items-center gap-1">
           <MapPin className="h-3 w-3" /> Click map to add points ({waypoints.length})
         </p>
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1">
+          <Button type="button" variant="secondary" size="sm" onClick={loadSample}>
+            <Route className="h-3 w-3 mr-1" /> Sample path
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={useMyLocation}>
+            <Crosshair className="h-3 w-3 mr-1" /> My location
+          </Button>
           <Button type="button" variant="outline" size="sm" onClick={undo} disabled={waypoints.length === 0}>
             <Undo2 className="h-3 w-3 mr-1" /> Undo
           </Button>

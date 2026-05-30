@@ -82,3 +82,25 @@ export function parseWaypointsText(text: string): Waypoint[] {
 export function waypointsToText(waypoints: Waypoint[]): string {
   return waypoints.map((w) => `${w.lat}, ${w.lng}`).join("\n");
 }
+
+/** Demo path (Dar es Salaam area) — pre-filled when adding a route. */
+export const SAMPLE_ROUTE_WAYPOINTS: Waypoint[] = [
+  { lat: -6.7924, lng: 39.2083, label: "Start" },
+  { lat: -6.8012, lng: 39.2284 },
+  { lat: -6.8156, lng: 39.2521 },
+  { lat: -6.8234, lng: 39.2695, label: "End" },
+];
+
+export function defaultRouteName(existingCount: number): string {
+  return `Route ${existingCount + 1}`;
+}
+
+export function buildRouteDefaults(existingCount: number, waypoints = SAMPLE_ROUTE_WAYPOINTS) {
+  return {
+    name: defaultRouteName(existingCount),
+    description: "Main fleet corridor",
+    waypoints: waypointsToText(waypoints),
+    corridor_radius_m: "500",
+    drawnPoints: waypoints,
+  };
+}
