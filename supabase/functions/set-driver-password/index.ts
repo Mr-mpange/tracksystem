@@ -24,11 +24,21 @@ async function requireFleetManager(admin: ReturnType<typeof createClient>, authH
   if (!ok) throw new Error("Fleet manager access required");
 }
 
+async function userIsFleetAdmin(admin: ReturnType<typeof createClient>, userId: string) {
+  const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", userId);
+  return (roles ?? []).some((r) => r.role === "super_admin" || r.role === "fleet_manager");
+}
+
 async function linkDriver(
   admin: ReturnType<typeof createClient>,
   driverId: string,
   userId: string
 ) {
+  if (await userIsFleetAdmin(admin, userId)) {
+    throw new Error(
+      "This email is already used by a fleet admin account. Use a different email on the driver record."
+    );
+  }
   await admin.from("drivers").update({ user_id: userId }).eq("id", driverId);
   await admin.from("user_roles").delete().eq("user_id", userId);
   await admin.from("user_roles").insert({ user_id: userId, role: "driver" });
